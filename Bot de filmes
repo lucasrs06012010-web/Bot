@@ -1,0 +1,80 @@
+import os
+import discord
+from discord.ext import commands
+
+intents = discord.Intents.default()
+intents.message_content = True
+
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+# LISTAS
+filmes_assistidos = []
+filmes_nao_assistidos = []
+
+@bot.command()
+async def comandos(ctx):
+    await ctx.send("""Comandos:
+!visto <nome> : adiciona o filme ou serie a lista de assistidos
+!assistidos : mostra a lista de assistido
+!adicionar <nome> : adiciona o filme ou serie a lista de não assistidos
+!pendentes : mostra a lista de não assistidos
+!nota <nota> <nome> : dar uma nota para o filme
+!comandos : mostra os comandos e suas funções
+!ola : cumprimenta o bot
+""")
+
+@bot.command()
+async def assistidos(ctx):
+    if not filmes_assistidos:
+        await ctx.send("Nenhum filme/série registrado como assistido.")
+        return
+    lista = "\n".join(filmes_assistidos)
+    await ctx.send(f"Lista de filmes e séries assistidos:\n{lista}")
+
+@bot.command()
+async def pendentes(ctx):
+    if not filmes_nao_assistidos:
+        await ctx.send("Nenhum filme/série pendente.")
+        return
+    lista = "\n".join(filmes_nao_assistidos)
+    await ctx.send(f"Lista de filmes e séries não assistidos:\n{lista}")
+
+# ADICIONAR ÀS LISTAS
+@bot.command()
+async def visto(ctx, *, nome: str = None):
+    if nome is None:
+        await ctx.send("Use: !visto <nome do filme>")
+    else:
+        filmes_assistidos.append(nome)
+        await ctx.send(f"Filme '{nome}' adicionado na lista de assistidos!")
+
+@bot.command()
+async def adicionar(ctx, *, nome: str = None):
+    if nome is None:
+        await ctx.send("Use: !adicionar <nome do filme>")
+    else:
+        filmes_nao_assistidos.append(nome)
+        await ctx.send(f"Filme '{nome}' adicionados a lista de pendentes!")
+
+@bot.command()
+async def nota(ctx, valor: float = None, *, nome: str = None):
+    if nome is None or valor is None:
+        await ctx.send("Use: !nota <nota do filme> <nome do filme>")
+    else:
+        filmes_assistidos.append(f"{nome} - {valor}/10")
+        await ctx.send(f"'{nome}' recebeu nota {valor}/10")
+
+@bot.event
+async def on_ready():
+    print(f'Estamos logados como {bot.user}')
+
+@bot.command()
+async def ola(ctx):
+    await ctx.send(f'OI! eu sou o bot {bot.user}, prazer em conhece-lo!')
+
+if __name__ == "__main__":
+    token = os.getenv("DISCORD_TOKEN")
+    if not token:
+        print("ERRO: defina a variável de ambiente DISCORD_TOKEN com o token do bot.")
+    else:
+        bot.run(token)
